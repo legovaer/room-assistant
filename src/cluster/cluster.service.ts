@@ -26,7 +26,8 @@ try {
 @Injectable()
 export class ClusterService
   extends Democracy
-  implements OnModuleInit, OnApplicationBootstrap, OnApplicationShutdown {
+  implements OnModuleInit, OnApplicationBootstrap, OnApplicationShutdown
+{
   private readonly configService: ConfigService;
   private readonly config: ClusterConfig;
   private readonly logger: Logger;
@@ -292,6 +293,6 @@ export class ClusterService
    * @param node - Node that was elected
    */
   private handleNodeElected(node: Node): void {
-    this.logger.log(`${node.id} has been elected as leader`);
+    this.logger.log(`${node.id} has been electeddd as leader`);
   }
 }

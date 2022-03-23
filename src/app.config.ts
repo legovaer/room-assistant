@@ -2,6 +2,7 @@ import { BluetoothLowEnergyConfig } from './integrations/bluetooth-low-energy/bl
 import { ClusterConfig } from './cluster/cluster.config';
 import { GlobalConfig } from './config/global.config';
 import { HomeAssistantConfig } from './integrations/home-assistant/home-assistant.config';
+import { EspresenseConfig } from './integrations/espresense/espresense.config';
 import { OmronD6tConfig } from './integrations/omron-d6t/omron-d6t.config';
 import { GridEyeConfig } from './integrations/grid-eye/grid-eye.config';
 import { BluetoothClassicConfig } from './integrations/bluetooth-classic/bluetooth-classic.config';
@@ -40,4 +41,6 @@ export class AppConfig {
   homeAssistant: HomeAssistantConfig = new HomeAssistantConfig();
   @(jf.object().required())
   mqtt: MqttConfig = new MqttConfig();
+  @(jf.object().required())
+  espresense: EspresenseConfig = new EspresenseConfig();
 }

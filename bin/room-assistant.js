@@ -52,7 +52,7 @@ if (options.help) {
 
 process.env.NODE_LOG_LEVEL = options.verbose
   ? 'debug'
-  : process.env.NODE_LOG_LEVEL || 'info';
+  : process.env.NODE_LOG_LEVEL || 'debug';
 process.env.NODE_CONFIG_DIR = options.config;
 
 if (options.digResolver) {

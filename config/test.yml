@@ -2,6 +2,7 @@ global:
   instanceName: test-instance
   integrations:
     - bluetoothLowEnergy
+    - espresense
 entities:
   behaviors:
     debounced_entity:
@@ -49,3 +50,4 @@ shell:
     - name: Test Switch
       onCommand: echo on
       offCommand: echo off
+espresense:
