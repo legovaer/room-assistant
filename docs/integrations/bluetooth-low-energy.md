@@ -10,7 +10,7 @@ The integration calculates an estimated distance in meters for all advertisement
 
 ::: tip
 
-Using this together with [Bluetooth Classic](./bluetooth-classic.md) on the same adapter works, but will slightly degrade the performance. If you encounter issues you can try to run to run the integrations from different HCI devices.
+Using this together with [Bluetooth Classic](./bluetooth-classic.md) on the same adapter works, but will slightly degrade the performance. If you encounter issues you can try to run the integrations from different HCI devices.
 
 :::
 
@@ -56,8 +56,6 @@ You can track iOS devices (iPhones, iPads) with this integration using our compa
 
 It is recommended to raise the `timeout` setting to at least `60` when using the companion app, as the signal may not always be constant.
 
-You can turn on auto-toggling of this feature in the companion app, which will automatically turn off the trackable information when you are not in reach of any room-assistant instance. This feature requires "always" location permissions to work. It uses beacon advertisements emitted by room-assistant and does not grab your geo-location.
-
 ::: details Example Config
 
 ```yaml
@@ -92,6 +90,8 @@ bluetoothLowEnergy:
 | `instanceBeaconMajor` | Number | `1` | The major of the advertised iBeacon. |
 | `instanceBeaconMinor` | Number | Random | The minor of the advertised iBeacon. |
 | `minDiscoveryLogRssi` | Number | -999 | Only log newly discovered beacons if raw RSSI values are greater than this (useful to reduce log spam if on a busy street). |
+| `kalmanProcessNoise` | Number | `0.0008` | Covariance of the process noise, used for measurement noise reduction via a [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter). |
+| `kalmanMeasurementNoise` | Number | `4` | Covariance of the measurement noise, used for measurement noise reduction via a [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter). |
 
 ### Tag Overrides
 

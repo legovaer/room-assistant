@@ -119,10 +119,13 @@ export class GridEyeService
    * @returns 8x8 matrix of temperatures
    */
   async maskZeroBasedValues(temperatures: number[][]): Promise<number[][]> {
-    const correctedMean = math.mean(temperatures.flat().filter(v => v >= 1 || v < 0))
+    const correctedMean = math.mean(
+      temperatures.flat().filter((v) => v >= 1 || v < 0)
+    );
 
-    return math.matrix(temperatures)
-      .map(v => v >= 1 || v < 0 ? v : correctedMean)
+    return math
+      .matrix(temperatures)
+      .map((v) => (v >= 1 || v < 0 ? v : correctedMean))
       .toArray() as number[][];
   }
 

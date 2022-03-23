@@ -50,6 +50,10 @@ export class EspresenseConfig {
   maxDistance?: number;
   @(jf.number().max(0).required())
   minDiscoveryLogRssi = -999;
+  @jf.number().positive().required()
+  kalmanProcessNoise = 0.008;
+  @jf.number().positive().required()
+  kalmanMeasurementNoise = 4;
 }
 
 function validateTagOverrides(options: {

@@ -324,7 +324,9 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
       let buffer: Buffer = null;
 
       if (!this.bluetoothService.acquireQueryMutex()) {
-        this.logger.debug(`${device.name}: Canceled battery reading as BLE adapter is already in use`);
+        this.logger.debug(
+          `${device.name}: Canceled battery reading as BLE adapter is already in use`
+        );
         return;
       }
 

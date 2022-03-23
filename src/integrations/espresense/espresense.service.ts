@@ -50,7 +50,11 @@ const INSTANCE_STATUS_BASE_TOPIC = 'room-assistant/status';
 
 @Injectable()
 export class EspresenseService
-  extends KalmanFilterable(Object, 0.01, 0.7)
+  extends KalmanFilterable(
+    Object,
+    'espresense.kalmanProcessNoise',
+    'espresense.kalmanMeasurementNoise'
+  )
   implements OnModuleInit
 {
   private readonly config: EspresenseConfig;
@@ -118,45 +122,6 @@ export class EspresenseService
     }
   }
 
-  private async listenMQTT(): Promise<void> {
-    if (!this.isConnected) {
-      await this.connectMQTT();
-    }
-  }
-
-  private async connectMQTT(): Promise<void> {
-    this.logger.log('Connecting to MQTT Broker...');
-    try {
-      this.mqttClient = await mqtt.connectAsync(
-        this.config.mqttUrl,
-        {
-          will: {
-            topic: this.statusTopic,
-            payload: 'offline',
-            retain: false,
-            qos: 1,
-            properties: {
-              willDelayInterval: 60,
-            },
-          },
-          ...this.config.mqttOptions,
-        },
-        false
-      );
-
-      this.mqttClient.on('error', (e) => this.logger.error(e.message, e.stack));
-      this.mqttClient.on('connect', this.handleReconnect.bind(this));
-
-      this.logger.log('Subscribing to Espresense topics....');
-      this.mqttClient.subscribe(this.config.discoveryPrefix);
-      this.mqttClient.on('message', this.handleIncomingMessage.bind(this));
-      this.logger.log(
-        `Successfully connected to MQTT broker at ${this.config.mqttUrl}`
-      );
-    } catch (e) {
-      this.logger.error(e.message, e.stack);
-    }
-  }
 
   /**
    * Handles broker re-connection events.

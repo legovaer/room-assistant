@@ -60,7 +60,7 @@ export class ShellService implements OnApplicationBootstrap {
         switchOptions.offCommand,
         switchOptions.icon
       );
-    });
+    }); 
   }
 
   /**

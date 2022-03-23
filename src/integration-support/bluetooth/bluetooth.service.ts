@@ -15,7 +15,6 @@ import { InjectMetric } from '@willsoto/nestjs-prometheus';
 const RSSI_REGEX = new RegExp(/-?[0-9]+/);
 const INQUIRY_LOCK_TIMEOUT = 30 * 1000;
 const SCAN_NO_PERIPHERAL_TIMEOUT = 30 * 1000;
-const IBEACON_UUID = 'D1338ACE-002D-44AF-88D1-E57C12484966';
 
 const BLE_CONNECTION_RETRIES = 5;
 const BLE_CONNECTION_TIMEOUT = 10 * 1000;
@@ -52,7 +51,6 @@ export class BluetoothService implements OnApplicationShutdown {
   private lastLowEnergyDiscovery: Date;
   private scanStartedAt?: Date;
   private queryMutexAvailable = true;
-  bleno = null;
 
   constructor(
     private readonly configService: ConfigService,
@@ -61,10 +59,6 @@ export class BluetoothService implements OnApplicationShutdown {
   ) {
     this.classicConfig = this.configService.get('bluetoothClassic');
     this.bleConfig = this.configService.get('bluetoothLowEnergy');
-
-    if (this.bleConfig.instanceBeaconEnabled) {
-      this.bleno = require('bleno');
-    }
   }
 
   /**
@@ -113,7 +107,6 @@ export class BluetoothService implements OnApplicationShutdown {
       this.adapters.getState(this._lowEnergyAdapterId) != 'inquiry'
     ) {
       noble.stopScanning();
-      this.bleno?.stopAdvertising();
     }
   }
 
@@ -426,7 +419,6 @@ export class BluetoothService implements OnApplicationShutdown {
 
     if (this._lowEnergyAdapterId === adapterId) {
       noble.stopScanning();
-      this.bleno?.stopAdvertising();
     }
 
     try {
@@ -475,7 +467,6 @@ export class BluetoothService implements OnApplicationShutdown {
           `Stopping scanning for BLE peripherals on adapter ${adapterId}`
         );
         noble.stopScanning();
-        this.bleno?.stopAdvertising();
     }
 
     this.adapters.setState(adapterId, 'inquiry');
@@ -563,13 +554,6 @@ export class BluetoothService implements OnApplicationShutdown {
 
       this.logger.warn(message);
     });
-
-    this.bleno?.on(
-      'stateChange',
-      this.handleAdvertisingAdapterStateChange.bind(this)
-    );
-    this.bleno?.on('advertisingStart', this.handleAdvertisingStart.bind(this));
-    this.bleno?.on('advertisingStop', this.handleAdvertisingStop.bind(this));
   }
 
   /**
@@ -581,10 +565,6 @@ export class BluetoothService implements OnApplicationShutdown {
     );
     this.scanStartedAt = new Date();
     this.adapters.setState(this._lowEnergyAdapterId, 'scan');
-
-    if (this.bleno) {
-      this.startAdvertising(); // called after scan started to prevent two operations at the same time
-    }
   }
 
   /**
@@ -598,29 +578,6 @@ export class BluetoothService implements OnApplicationShutdown {
     if (this.adapters.getState(this._lowEnergyAdapterId) === 'scan') {
       this.adapters.setState(this._lowEnergyAdapterId, 'inactive');
     }
-  }
-
-  /**
-   * Callback that is executed when BLE advertising is started.
-   *
-   * @param e - Error, not present if there was no issue
-   */
-  private handleAdvertisingStart(e?: Error): void {
-    if (e) {
-      this.logger.error(
-        `Failed to start advertising instance via BLE: ${e.message}`,
-        e.stack
-      );
-    } else {
-      this.logger.debug('Started advertising instance via BLE');
-    }
-  }
-
-  /**
-   * Callback that is executed when BLE advertising is stopped.
-   */
-  private handleAdvertisingStop(): void {
-    this.logger.debug('Stopped advertising instance via BLE');
   }
 
   /**
@@ -663,36 +620,6 @@ export class BluetoothService implements OnApplicationShutdown {
         `Adapter ${this._lowEnergyAdapterId} is set to inactive`
       );
       this.adapters.setState(this._lowEnergyAdapterId, 'inactive');
-    }
-  }
-
-  /**
-   * Handles state adapter changes as reported by Bleno.
-   *
-   * @param state - State of the HCI adapter
-   */
-  private handleAdvertisingAdapterStateChange(state: string): void {
-    this.logger.debug(
-      `Adapter ${this._lowEnergyAdapterId} went into state ${state}`
-    );
-    const adapterState = this.adapters.getState(this._lowEnergyAdapterId);
-
-    if (this.bleno && state === 'poweredOn' && adapterState === 'scan') {
-      this.startAdvertising();
-    }
-  }
-
-  /**
-   * Starts advertising instance as an iBeacon.
-   */
-  private startAdvertising(): void {
-    if (this.bleno?.state === 'poweredOn') {
-      this.bleno.startAdvertisingIBeacon(
-        IBEACON_UUID,
-        this.bleConfig.instanceBeaconMajor,
-        this.bleConfig.instanceBeaconMinor,
-        -59
-      );
     }
   }
 

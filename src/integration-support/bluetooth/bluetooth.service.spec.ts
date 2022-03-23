@@ -5,7 +5,6 @@ import { BluetoothService } from './bluetooth.service';
 import { ConfigModule } from '../../config/config.module';
 import { BluetoothHealthIndicator } from './bluetooth.health';
 import noble, { Peripheral } from '@mkerix/noble';
-import bleno from 'bleno';
 import * as Promises from '../../util/promises';
 import { makeCounterProvider } from '@willsoto/nestjs-prometheus';
 import { mocked } from 'ts-jest/utils';
@@ -17,7 +16,6 @@ jest.mock('util', () => ({
 }));
 
 const mockNoble = mocked(noble);
-const mockBleno = mocked(bleno);
 
 const loggerService = {
   log: jest.fn(),
@@ -46,7 +44,6 @@ describe('BluetoothService', () => {
     }).compile();
     module.useLogger(loggerService);
     service = module.get<BluetoothService>(BluetoothService);
-    service.bleno = mockBleno;
   });
 
   describe('Bluetooth Classic', () => {
@@ -102,7 +99,7 @@ describe('BluetoothService', () => {
       );
     });
 
-    it('should stop scanning and advertising on an adapter while performing an inquiry', async () => {
+    it('should stop scanning on an adapter while performing an inquiry', async () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
       await stateChangeHandler('poweredOn');
@@ -119,7 +116,6 @@ describe('BluetoothService', () => {
       });
 
       expect(mockNoble.stopScanning).toHaveBeenCalledTimes(1);
-      expect(mockBleno.stopAdvertising).toHaveBeenCalledTimes(1);
 
       execResolve({ stdout: '-1' });
 
@@ -137,7 +133,7 @@ describe('BluetoothService', () => {
       expect(mockNoble.startScanning).toHaveBeenCalledTimes(2);
     });
 
-    it('should stop scanning and advertising on an adapter while getting Classic device info', async () => {
+    it('should stop scanning on an adapter while getting Classic device info', async () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
       await stateChangeHandler('poweredOn');
@@ -156,7 +152,6 @@ describe('BluetoothService', () => {
         });
 
       expect(mockNoble.stopScanning).toHaveBeenCalledTimes(1);
-      expect(mockBleno.stopAdvertising).toHaveBeenCalledTimes(1);
 
       execResolve({ stdout: '' });
 
@@ -266,17 +261,12 @@ Requesting information ...
         expect.any(Function)
       );
       expect(mockNoble.on).toHaveBeenCalledWith('discover', callback);
-      expect(mockBleno.on).toHaveBeenCalledWith(
-        'stateChange',
-        expect.any(Function)
-      );
     });
 
     it('should only setup noble listeners once', () => {
       service.onLowEnergyDiscovery(() => undefined);
       service.onLowEnergyDiscovery(() => undefined);
       expect(mockNoble.on).toHaveBeenCalledTimes(10);
-      expect(mockBleno.on).toHaveBeenCalledTimes(3);
     });
 
     it('should enable scanning when the adapter is inactive', () => {
@@ -308,7 +298,7 @@ Requesting information ...
       return inquirePromise;
     });
 
-    it('should continue scanning and advertising if Classic inquiries are performed on another adapter', async () => {
+    it('should continue scanning if Classic inquiries are performed on another adapter', async () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
       stateChangeHandler('poweredOn');
@@ -319,7 +309,6 @@ Requesting information ...
 
       expect(mockNoble.startScanning).toHaveBeenCalledTimes(1);
       expect(mockNoble.stopScanning).not.toHaveBeenCalled();
-      expect(mockBleno.stopAdvertising).not.toHaveBeenCalled();
     });
 
     it('should throw an exception if trying to connect to a non-connectable peripheral', async () => {
@@ -937,45 +926,11 @@ Requesting information ...
       );
     });
 
-    it('should start advertising instance iBeacon after the scan started', () => {
-      service.onLowEnergyDiscovery(() => undefined);
-      const scanStartHandler = mockNoble.on.mock.calls[5][1];
-      scanStartHandler();
-
-      expect(mockBleno.startAdvertisingIBeacon).toHaveBeenCalledWith(
-        'D1338ACE-002D-44AF-88D1-E57C12484966',
-        1,
-        expect.any(Number),
-        -59
-      );
-    });
-
-    it('should start advertising if bleno state goes into poweredOn and adapter is scanning', () => {
-      Object.defineProperty(mockBleno, 'state', {
-        value: 'poweredOff',
-      });
-
-      service.onLowEnergyDiscovery(() => undefined);
-      const scanStartHandler = mockNoble.on.mock.calls[5][1];
-      scanStartHandler();
-
-      const blenoStateChangeHandler = mockBleno.on.mock.calls[0][1] as (
-        state: any
-      ) => void;
-      Object.defineProperty(mockBleno, 'state', {
-        value: 'poweredOn',
-      });
-      blenoStateChangeHandler('poweredOn');
-
-      expect(mockBleno.startAdvertisingIBeacon).toHaveBeenCalledTimes(1);
-    });
-
     it('should stop BLE operations on shutdown', () => {
       service.onLowEnergyDiscovery(() => undefined);
       service.onApplicationShutdown();
 
       expect(mockNoble.stopScanning).toHaveBeenCalledTimes(1);
-      expect(mockBleno.stopAdvertising).toHaveBeenCalledTimes(1);
     });
   });
 });
